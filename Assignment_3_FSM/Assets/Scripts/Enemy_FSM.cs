@@ -73,6 +73,7 @@ public class Enemy_FSM : MonoBehaviour
         CurrentState = ENEMY_STATE.MOVING;
     }
 
+    //EnemyMoving function
     public IEnumerator EnemyMoving()
     {
         // one transition of player visible to chasing state
@@ -97,6 +98,8 @@ public class Enemy_FSM : MonoBehaviour
         }
 
     }
+   
+    //EnemyChasing function
     public IEnumerator EnemyChasing()
     {
         while (currentState == ENEMY_STATE.CHASING)
@@ -129,6 +132,8 @@ public class Enemy_FSM : MonoBehaviour
         }
         yield break;
     }
+
+    //EnemyFire function
     public IEnumerator EnemyFire()
     {
         //one transition (life lost  to dead and out of range to chasing)
@@ -160,7 +165,7 @@ public class Enemy_FSM : MonoBehaviour
         yield break;
     }
 
-  
+    //EnemyDead function
     public IEnumerator EnemyDead()
     {
         //two transitions (no life to gameover and remaining life to moving)
@@ -168,6 +173,7 @@ public class Enemy_FSM : MonoBehaviour
         yield break;
     }
 
+    //EnemyGameover
     public IEnumerator EnemyGameover()
     {
    //finish levels stop the game
@@ -175,6 +181,7 @@ public class Enemy_FSM : MonoBehaviour
         GameOver();
         yield break;
     }
+    
     public void GameOver()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene);
