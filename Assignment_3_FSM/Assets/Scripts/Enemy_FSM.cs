@@ -37,7 +37,7 @@ public class Enemy_FSM : MonoBehaviour
                 case ENEMY_STATE.FIRE:
                     StartCoroutine(EnemyFire());
                     break;
-                    /*
+                   /* 
                 case ENEMY_STATE.DEAD:
                     StartCoroutine(EnemyDead());
                     break;
@@ -55,7 +55,7 @@ public class Enemy_FSM : MonoBehaviour
     private NavMeshAgent agent = null;
     public Transform playerTransform = null;
     private Transform moveDestination = null;
-   // private Health playerHealth = null;
+    private Health playerHealth = null;
     public float maxDamage = 10f;
 
     //Awake method 
@@ -63,7 +63,7 @@ public class Enemy_FSM : MonoBehaviour
     {
         checkMyVision = GetComponent<CheckMyVision>();
         agent = GetComponent<NavMeshAgent>();
-        //playerHealth = GameObject.FindGameObjectWithTag("Player").GetComponent<Health>();
+        playerHealth = GameObject.FindGameObjectWithTag("Player").GetComponent<Health>();
         //playerTransform = playerHealth.GetComponent<Transform>();
     }
 
@@ -111,8 +111,8 @@ public class Enemy_FSM : MonoBehaviour
             {
                 yield return null;
             }
-            Debug.Log(agent.stoppingDistance);
-            if (agent.remainingDistance <= agent.stoppingDistance)
+            float dist = Vector3.Distance(agent.transform.position, GameObject.FindGameObjectWithTag("Player").transform.position);
+            if (dist <= 1.0f)
             {
                 agent.isStopped = true;
                 //if out if sight go back to moving
@@ -133,21 +133,26 @@ public class Enemy_FSM : MonoBehaviour
     }
     public IEnumerator EnemyFire()
     {
-        //one transition (life lost  to dead)
+        //one transition (life lost  to dead and out of range to chasing)
+        Debug.Log("Fire function here");
         while (currentState == ENEMY_STATE.FIRE)
         {
             agent.isStopped = false;
             agent.SetDestination(playerTransform.position);
             while (agent.pathPending)
-                yield return null;
+               yield return null;
+            Debug.Log("fire while statement");
             if (agent.remainingDistance > agent.stoppingDistance)
             {
+                Debug.Log("Back to chasing");
                 CurrentState = ENEMY_STATE.CHASING;
-            }
-            else
+            }else
             {
-                //playerHealth.HealthPoints -= maxDamage * Time.deltaTime;
+                
+                playerHealth.HealthPoints -= maxDamage * Time.deltaTime;
+        
             }
+                
             yield return null;
         }
         yield break;
