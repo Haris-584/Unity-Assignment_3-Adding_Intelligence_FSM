@@ -36,15 +36,14 @@ public class Enemy_FSM : MonoBehaviour
                     break;
                 case ENEMY_STATE.FIRE:
                     StartCoroutine(EnemyFire());
-                    break;
-                   /* 
+                    break;  
                 case ENEMY_STATE.DEAD:
                     StartCoroutine(EnemyDead());
                     break;
                 case ENEMY_STATE.FIRE:
                     StartCoroutine(EnemyFire());
                     break;
-                     */
+                     
             }
 
         }
@@ -64,7 +63,6 @@ public class Enemy_FSM : MonoBehaviour
         checkMyVision = GetComponent<CheckMyVision>();
         agent = GetComponent<NavMeshAgent>();
         playerHealth = GameObject.FindGameObjectWithTag("Player").GetComponent<Health>();
-        //playerTransform = playerHealth.GetComponent<Transform>();
     }
 
     // Start is called before the first frame update
@@ -150,7 +148,11 @@ public class Enemy_FSM : MonoBehaviour
             {
                 
                 playerHealth.HealthPoints -= maxDamage * Time.deltaTime;
-        
+                while (playerHealthPoints == 0)
+                {
+                    CurrentState = ENEMY_STATE.Dead;
+                }
+                
             }
                 
             yield return null;
@@ -158,20 +160,25 @@ public class Enemy_FSM : MonoBehaviour
         yield break;
     }
 
-  /*
+  
     public IEnumerator EnemyDead()
     {
         //two transitions (no life to gameover and remaining life to moving)
+        Debug.Log("Dead function here");
         yield break;
     }
 
     public IEnumerator EnemyGameover()
     {
-   //finish levels stop the game 
+   //finish levels stop the game
+        Debug.Log("Gameover function here");
+        GameOver();
         yield break;
     }
-   * 
-   */
+    public void GameOver()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene);
+    }
    
     // Update is called once per frame
     void Update()
