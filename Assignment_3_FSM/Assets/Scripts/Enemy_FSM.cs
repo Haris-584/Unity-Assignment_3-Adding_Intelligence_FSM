@@ -5,7 +5,7 @@ using UnityEngine.AI;
 
 public class Enemy_FSM : MonoBehaviour
 {
-    public enum ENEMY_STATE { PATROL, CHASE, ATTACK };
+    public enum ENEMY_STATE { MOVING, CHASING, FIRE , DEAD, GAMEOVER};
     [SerializeField]
     private ENEMY_STATE currentState;
     public ENEMY_STATE CurrentState
@@ -20,17 +20,26 @@ public class Enemy_FSM : MonoBehaviour
 
             currentState = value;
             StopAllCoroutines();
+
             switch (currentState)
             {
-                case ENEMY_STATE.PATROL:
-                    StartCoroutine(EnemyPatrol());
+                case ENEMY_STATE.MOVING:
+                    StartCoroutine(EnemyMoving());
                     break;
-                case ENEMY_STATE.CHASE:
-                    StartCoroutine(EnemyChase());
+                case ENEMY_STATE.CHASING:
+                    StartCoroutine(EnemyChasing());
                     break;
-                case ENEMY_STATE.ATTACK:
-                    StartCoroutine(EnemyAttack());
+                case ENEMY_STATE.FIRE:
+                    StartCoroutine(EnemyFire());
                     break;
+                    /*
+                case ENEMY_STATE.DEAD:
+                    StartCoroutine(EnemyDead());
+                    break;
+                case ENEMY_STATE.FIRE:
+                    StartCoroutine(EnemyFire());
+                    break;
+                     */
             }
 
         }
@@ -46,7 +55,7 @@ public class Enemy_FSM : MonoBehaviour
     {
         checkMyVision = GetComponent<CheckMyVision>();
         agent = GetComponent<NavMeshAgent>();
-        playerHealth = GameObject.FindGameObjectWithTag("Player").GetComponent<Health>();
+        //playerHealth = GameObject.FindGameObjectWithTag("Player").GetComponent<Health>();
         //playerTransform = playerHealth.GetComponent<Transform>();
     }
 
@@ -55,12 +64,12 @@ public class Enemy_FSM : MonoBehaviour
     {
         GameObject[] destinations = GameObject.FindGameObjectsWithTag("Dest");
         patrolDestination = destinations[Random.Range(0, destinations.Length)].GetComponent<Transform>();
-        CurrentState = ENEMY_STATE.PATROL;
+        CurrentState = ENEMY_STATE.MOVING;
     }
 
-    public IEnumerator EnemyPatrol()
+    public IEnumerator EnemyMoving()
     {
-        while (currentState == ENEMY_STATE.PATROL)
+        while (currentState == ENEMY_STATE.MOVING)
         {
             checkMyVision.sensitivity = CheckMyVision.enmSensitivity.HIGH;
             agent.isStopped = false;
@@ -73,16 +82,16 @@ public class Enemy_FSM : MonoBehaviour
             if (checkMyVision.targetInSight)
             {
                 agent.isStopped = true;
-                CurrentState = ENEMY_STATE.CHASE;
+                CurrentState = ENEMY_STATE.CHASING;
                 yield break;
             }
             yield return null;
         }
 
     }
-    public IEnumerator EnemyChase()
+    public IEnumerator EnemyChasing()
     {
-        while (currentState == ENEMY_STATE.CHASE)
+        while (currentState == ENEMY_STATE.CHASING)
         {
             checkMyVision.sensitivity = CheckMyVision.enmSensitivity.LOW;
             agent.isStopped = false;
@@ -97,11 +106,11 @@ public class Enemy_FSM : MonoBehaviour
                 agent.isStopped = true;
                 if (!checkMyVision.targetInSight)
                 {
-                    CurrentState = ENEMY_STATE.PATROL;
+                    CurrentState = ENEMY_STATE.MOVING;
                 }
                 else
                 {
-                    CurrentState = ENEMY_STATE.ATTACK;
+                    CurrentState = ENEMY_STATE.FIRE;
                 }
                 yield break;
             }
@@ -109,9 +118,9 @@ public class Enemy_FSM : MonoBehaviour
         }
         yield break;
     }
-    public IEnumerator EnemyAttack()
+    public IEnumerator EnemyFire()
     {
-        while (currentState == ENEMY_STATE.ATTACK)
+        while (currentState == ENEMY_STATE.FIRE)
         {
             Debug.Log("test");
             agent.isStopped = false;
@@ -120,16 +129,30 @@ public class Enemy_FSM : MonoBehaviour
                 yield return null;
             if (agent.remainingDistance > agent.stoppingDistance)
             {
-                CurrentState = ENEMY_STATE.CHASE;
+                CurrentState = ENEMY_STATE.CHASING;
             }
             else
             {
-                playerHealth.HealthPoints -= maxDamage * Time.deltaTime;
+                //playerHealth.HealthPoints -= maxDamage * Time.deltaTime;
             }
             yield return null;
         }
         yield break;
     }
+
+  /*
+    public IEnumerator EnemyDead()
+    {
+        yield break;
+    }
+
+    public IEnumerator EnemyGameover()
+    {
+        yield break;
+    }
+   * 
+   */
+   
     // Update is called once per frame
     void Update()
     {
