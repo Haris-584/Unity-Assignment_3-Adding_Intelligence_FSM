@@ -5,9 +5,14 @@ using UnityEngine.AI;
 
 public class Enemy_FSM : MonoBehaviour
 {
+    //Five States
     public enum ENEMY_STATE { MOVING, CHASING, FIRE , DEAD, GAMEOVER};
+
+    //Current state 
     [SerializeField]
     private ENEMY_STATE currentState;
+
+    //set and get current state
     public ENEMY_STATE CurrentState
     {
         get
@@ -45,12 +50,15 @@ public class Enemy_FSM : MonoBehaviour
         }
     }
 
+    //Variable decleration and assigning 
     private CheckMyVision checkMyVision;
     private NavMeshAgent agent = null;
     public Transform playerTransform = null;
-    private Transform patrolDestination = null;
+    private Transform moveDestination = null;
    // private Health playerHealth = null;
     public float maxDamage = 10f;
+
+    //Awake method 
     private void Awake()
     {
         checkMyVision = GetComponent<CheckMyVision>();
@@ -63,28 +71,30 @@ public class Enemy_FSM : MonoBehaviour
     void Start()
     {
         GameObject[] destinations = GameObject.FindGameObjectsWithTag("Dest");
-        patrolDestination = destinations[Random.Range(0, destinations.Length)].GetComponent<Transform>();
+        moveDestination = destinations[Random.Range(0, destinations.Length)].GetComponent<Transform>();
         CurrentState = ENEMY_STATE.MOVING;
     }
 
     public IEnumerator EnemyMoving()
     {
+        // one transition of player visible to chasing state
         while (currentState == ENEMY_STATE.MOVING)
         {
             checkMyVision.sensitivity = CheckMyVision.enmSensitivity.HIGH;
             agent.isStopped = false;
-            agent.SetDestination(patrolDestination.position);
+            agent.SetDestination(moveDestination.position);
             while (agent.pathPending)
             {
                 yield return null;
             }
-
+            //playervisible
             if (checkMyVision.targetInSight)
             {
                 agent.isStopped = true;
                 CurrentState = ENEMY_STATE.CHASING;
                 yield break;
             }
+             
             yield return null;
         }
 
@@ -93,6 +103,7 @@ public class Enemy_FSM : MonoBehaviour
     {
         while (currentState == ENEMY_STATE.CHASING)
         {
+            //two transition (in range  to fire and out of sight to moving)
             checkMyVision.sensitivity = CheckMyVision.enmSensitivity.LOW;
             agent.isStopped = false;
             agent.SetDestination(checkMyVision.lastKnownSighting);
@@ -104,10 +115,12 @@ public class Enemy_FSM : MonoBehaviour
             if (agent.remainingDistance <= agent.stoppingDistance)
             {
                 agent.isStopped = true;
+                //if out if sight go back to moving
                 if (!checkMyVision.targetInSight)
                 {
                     CurrentState = ENEMY_STATE.MOVING;
                 }
+                    //if in range the fire or attack
                 else
                 {
                     CurrentState = ENEMY_STATE.FIRE;
@@ -120,9 +133,9 @@ public class Enemy_FSM : MonoBehaviour
     }
     public IEnumerator EnemyFire()
     {
+        //one transition (life lost  to dead)
         while (currentState == ENEMY_STATE.FIRE)
         {
-            Debug.Log("test");
             agent.isStopped = false;
             agent.SetDestination(playerTransform.position);
             while (agent.pathPending)
@@ -143,11 +156,13 @@ public class Enemy_FSM : MonoBehaviour
   /*
     public IEnumerator EnemyDead()
     {
+        //two transitions (no life to gameover and remaining life to moving)
         yield break;
     }
 
     public IEnumerator EnemyGameover()
     {
+   //finish levels stop the game 
         yield break;
     }
    * 
