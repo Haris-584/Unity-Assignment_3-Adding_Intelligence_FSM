@@ -40,8 +40,8 @@ public class Enemy_FSM : MonoBehaviour
                 case ENEMY_STATE.DEAD:
                     StartCoroutine(EnemyDead());
                     break;
-                case ENEMY_STATE.FIRE:
-                    StartCoroutine(EnemyFire());
+                case ENEMY_STATE.GAMEOVER:
+                    StartCoroutine(EnemyGameOver());
                     break;
                      
             }
@@ -76,6 +76,7 @@ public class Enemy_FSM : MonoBehaviour
     //EnemyMoving function
     public IEnumerator EnemyMoving()
     {
+        Debug.Log("Moving function here");
         // one transition of player visible to chasing state
         while (currentState == ENEMY_STATE.MOVING)
         {
@@ -88,8 +89,10 @@ public class Enemy_FSM : MonoBehaviour
             }
             //playervisible
             if (checkMyVision.targetInSight)
+            //float dist = Vector3.Distance(agent.transform.position, transform.position);
+            //if (dist >= 2.0f)
             {
-                agent.isStopped = true;
+                //agent.isStopped = true;
                 CurrentState = ENEMY_STATE.CHASING;
                 yield break;
             }
@@ -102,9 +105,11 @@ public class Enemy_FSM : MonoBehaviour
     //EnemyChasing function
     public IEnumerator EnemyChasing()
     {
+        Debug.Log("Chasing function here");
         while (currentState == ENEMY_STATE.CHASING)
         {
             //two transition (in range  to fire and out of sight to moving)
+           
             checkMyVision.sensitivity = CheckMyVision.enmSensitivity.LOW;
             agent.isStopped = false;
             agent.SetDestination(checkMyVision.lastKnownSighting);
@@ -112,8 +117,9 @@ public class Enemy_FSM : MonoBehaviour
             {
                 yield return null;
             }
-            float dist = Vector3.Distance(agent.transform.position, GameObject.FindGameObjectWithTag("Player").transform.position);
-            if (dist <= 1.0f)
+            //if (agent.remainingDistance <= agent.stoppingDistance)
+             float dist = Vector3.Distance(agent.transform.position, transform.position);
+             if (dist <= 1.0f)
             {
                 agent.isStopped = true;
                 //if out if sight go back to moving
@@ -140,25 +146,22 @@ public class Enemy_FSM : MonoBehaviour
         Debug.Log("Fire function here");
         while (currentState == ENEMY_STATE.FIRE)
         {
-            agent.isStopped = false;
+            agent.isStopped = true;
             agent.SetDestination(playerTransform.position);
             while (agent.pathPending)
                yield return null;
-            Debug.Log("fire while statement");
-            if (agent.remainingDistance > agent.stoppingDistance)
+            float dist = Vector3.Distance(agent.transform.position, transform.position);
+            if (dist < 2.0f)
             {
-                Debug.Log("Back to chasing");
+                
                 CurrentState = ENEMY_STATE.CHASING;
-            }else
-            {
+            }
                 
                 playerHealth.HealthPoints -= maxDamage * Time.deltaTime;
-                while (playerHealthPoints == 0)
-                {
-                    CurrentState = ENEMY_STATE.Dead;
-                }
-                
-            }
+                if(playerHealth.HealthPoints <= 0)
+                 {
+                    CurrentState = ENEMY_STATE.DEAD;
+                 }
                 
             yield return null;
         }
@@ -169,23 +172,19 @@ public class Enemy_FSM : MonoBehaviour
     public IEnumerator EnemyDead()
     {
         //two transitions (no life to gameover and remaining life to moving)
-        Debug.Log("Dead function here");
+        //Debug.Log("Dead function here");
         yield break;
     }
 
     //EnemyGameover
-    public IEnumerator EnemyGameover()
+    public IEnumerator EnemyGameOver()
     {
    //finish levels stop the game
-        Debug.Log("Gameover function here");
-        GameOver();
+       // Debug.Log("Gameover function here");
+        //GameOver();
         yield break;
     }
     
-    public void GameOver()
-    {
-        SceneManager.LoadScene(SceneManager.GetActiveScene);
-    }
    
     // Update is called once per frame
     void Update()
